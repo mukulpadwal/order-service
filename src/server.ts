@@ -19,7 +19,7 @@ const startServer = async () => {
             process.exit(1);
         });
     }
-}
+};
 
 startServer().catch(async (error) => {
     logger.error(error);

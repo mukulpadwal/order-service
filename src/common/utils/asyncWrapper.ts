@@ -1,7 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import createHttpError from "http-errors";
 
-
 const asyncWrapper = (requestHandler: RequestHandler) => {
     return (req: Request, res: Response, next: NextFunction) => {
         Promise.resolve(requestHandler(req, res, next)).catch((error) => {
@@ -11,7 +10,7 @@ const asyncWrapper = (requestHandler: RequestHandler) => {
 
             return next(createHttpError(500, "Internal Server Error."));
         });
-    }
-}
+    };
+};
 
 export default asyncWrapper;

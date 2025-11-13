@@ -4,8 +4,12 @@ import { v4 as uuidv4 } from "uuid";
 import { logger } from "../../config/index.js";
 import { ApiResponse } from "../utils/index.js";
 
-
-const globalErrorHandler = (err: HttpError, req: Request, res: Response, next: NextFunction) => {
+const globalErrorHandler = (
+    err: HttpError,
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     const errorId = uuidv4();
     const statusCode = err.status ?? 500;
 
@@ -21,17 +25,19 @@ const globalErrorHandler = (err: HttpError, req: Request, res: Response, next: N
         method: req.method,
     });
 
-    res.status(statusCode).json(new ApiResponse(statusCode, message, null, [
-        {
-            ref: errorId,
-            type: err.name,
-            message: message,
-            path: req.path,
-            method: req.method,
-            location: "server",
-            stack: isProduction ? null : err.stack,
-        },
-    ]))
-}
+    res.status(statusCode).json(
+        new ApiResponse(statusCode, message, null, [
+            {
+                ref: errorId,
+                type: err.name,
+                message: message,
+                path: req.path,
+                method: req.method,
+                location: "server",
+                stack: isProduction ? null : err.stack,
+            },
+        ])
+    );
+};
 
 export default globalErrorHandler;
