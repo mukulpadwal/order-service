@@ -1,9 +1,11 @@
-import type { Response } from "express";
+import type { NextFunction, Response } from "express";
 import type CustomerService from "./customer.service.js";
 import type { Logger } from "winston";
 import { ApiResponse } from "../common/utils/index.js";
 import type { Request } from "express-jwt";
 import type { ICustomerRequest } from "./customer.types.js";
+import mongoose from "mongoose";
+import createHttpError from "http-errors";
 
 class CustomerController {
     private customerService: CustomerService;
@@ -62,6 +64,53 @@ class CustomerController {
         return res
             .status(200)
             .json(new ApiResponse(200, "Customer Details Fetched", customer));
+    };
+
+    addAddress = async (req: Request, res: Response, next: NextFunction) => {
+        const { sub: userId } = (req as ICustomerRequest).auth;
+        const { customerId } = req.params;
+
+        this.logger.info("Request to add address.", {
+            customerId,
+            userId,
+        });
+
+        if (!mongoose.Types.ObjectId.isValid(customerId as string)) {
+            const error = createHttpError(400, "Invalid Customer Id");
+            next(error);
+            return;
+        }
+
+        const { address } = req.body;
+
+        if (!address.trim()) {
+            const error = createHttpError(
+                400,
+                "Kindly provide a valid address."
+            );
+            next(error);
+            return;
+        }
+
+        const customer = await this.customerService.addAddress({
+            address,
+            userId,
+            customerId,
+        });
+
+        if (!customer) {
+            const error = createHttpError(404, "Customer not found.");
+            next(error);
+            return;
+        }
+
+        this.logger.info("Address added successfully.", {
+            customerId: customer._id,
+        });
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, "Address Updated.", customer));
     };
 }
 

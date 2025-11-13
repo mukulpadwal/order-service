@@ -15,6 +15,32 @@ class CustomerService {
             addresses,
         });
     }
+
+    async addAddress({
+        address,
+        userId,
+        customerId,
+    }: {
+        address: string;
+        userId: string;
+        customerId: string | undefined;
+    }) {
+        return await CustomerModel.findOneAndUpdate(
+            {
+                _id: customerId,
+                userId,
+            },
+            {
+                $push: {
+                    addresses: {
+                        address,
+                        isDefault: false,
+                    },
+                },
+            },
+            { new: true }
+        );
+    }
 }
 
 export default CustomerService;

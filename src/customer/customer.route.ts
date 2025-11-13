@@ -10,6 +10,15 @@ const customerService = new CustomerService();
 const customerController = new CustomerController(customerService, logger);
 
 // Protected Routes
-customerRouter.get("/", authenticate, asyncWrapper(customerController.getCustomer))
+customerRouter.get(
+    "/",
+    authenticate,
+    asyncWrapper(customerController.getCustomer)
+);
+customerRouter.patch(
+    "/addresses/:customerId",
+    authenticate,
+    asyncWrapper(customerController.addAddress)
+);
 
 export default customerRouter;
