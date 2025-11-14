@@ -11,3 +11,8 @@ export interface IAuthRequest extends Request {
         email: string;
     };
 }
+
+export interface IPaginateQuery {
+    page: number;
+    limit: number;
+}

@@ -6,6 +6,7 @@ import { Roles } from "../common/constants/index.js";
 import createHttpError from "http-errors";
 import ApiResponse from "../common/utils/apiResponse.js";
 import mongoose from "mongoose";
+import type { ICouponFilter } from "./coupon.types.js";
 
 class CouponController {
     private couponService: CouponService;
@@ -160,7 +161,56 @@ class CouponController {
         return res.status(200).json(new ApiResponse(200, "Coupon deleted."));
     };
 
-    getAll = async (req: Request, res: Response) => {};
+    getAll = async (req: Request, res: Response) => {
+        const { q, discount, validUpto, tenantId, currentPage, perPage } =
+            req.query;
+
+        const filters: ICouponFilter = {};
+
+        const authReq = (req as IAuthRequest).auth;
+        
+        if (tenantId && (tenantId as string).trim()) {
+            if (authReq.role === Roles.MANAGER) {
+                filters.tenantId = Number(authReq.tenantId);
+            } else {
+                filters.tenantId = Number(tenantId);
+            }
+        } else {
+            if (authReq.role === Roles.MANAGER) {
+                filters.tenantId = Number(authReq.tenantId);
+            }
+        }
+
+        if (validUpto && (validUpto as string).trim()) {
+            filters.validUpto = new Date(validUpto as unknown as Date);
+        }
+
+        if (discount && (discount as string).trim()) {
+            filters.discount = Number(discount);
+        }
+
+        this.logger.info(
+            `Request to list all coupons`,
+            {
+                q,
+                discount,
+                validUpto,
+                tenantId,
+                currentPage,
+                perPage,
+            },
+            { filters }
+        );
+
+        const coupons = await this.couponService.getAll(q as string, filters, {
+            page: currentPage ? parseInt(currentPage as string) : 1,
+            limit: perPage ? parseInt(perPage as string) : 10,
+        });
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, "Coupons fetched.", coupons));
+    };
 
     getSingle = async (req: Request, res: Response) => {};
 }

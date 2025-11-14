@@ -1,5 +1,7 @@
+import type { IPaginateQuery } from "../common/types/index.js";
+import { paginateLabels } from "../config/index.js";
 import CouponModel from "./coupon.model.js";
-import type { ICoupon } from "./coupon.types.js";
+import type { ICoupon, ICouponFilter } from "./coupon.types.js";
 
 class CouponService {
     async create({ title, code, discount, validUpto, tenantId }: ICoupon) {
@@ -37,6 +39,35 @@ class CouponService {
 
     async findById(couponId: string | undefined) {
         return await CouponModel.findById(couponId);
+    }
+
+    async getAll(
+        q: string,
+        filters: ICouponFilter,
+        paginateQuery: IPaginateQuery
+    ) {
+        const regExp = new RegExp(q, "i");
+
+        const matchQueryParams = {
+            ...filters,
+            title: regExp,
+        };
+
+        const aggregate = CouponModel.aggregate([
+            {
+                $match: matchQueryParams,
+            },
+        ]);
+
+        const coupons = await (CouponModel as any).aggregatePaginate(
+            aggregate,
+            {
+                ...paginateQuery,
+                customLabels: paginateLabels,
+            }
+        );
+
+        return coupons;
     }
 }
 

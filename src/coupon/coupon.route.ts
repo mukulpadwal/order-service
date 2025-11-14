@@ -35,7 +35,7 @@ couponRouter.delete(
 couponRouter.get(
     "/list",
     authenticate,
-    canAccess,
+    canAccess([Roles.ADMIN, Roles.MANAGER]),
     asyncWrapper(couponController.getAll)
 );
 

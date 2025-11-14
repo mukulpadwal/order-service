@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 import type { ICoupon } from "./coupon.types.js";
 
 const { Schema, model } = mongoose;
@@ -33,6 +34,8 @@ const couponSchema = new Schema<ICoupon>(
     },
     { timestamps: true }
 );
+
+couponSchema.plugin(mongooseAggregatePaginate);
 
 const CouponModel = model("coupon", couponSchema);
 export default CouponModel;
