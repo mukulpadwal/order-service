@@ -21,7 +21,7 @@ couponRouter.post(
 couponRouter.patch(
     "/:couponId",
     authenticate,
-    canAccess,
+    canAccess([Roles.ADMIN, Roles.MANAGER]),
     asyncWrapper(couponController.update)
 );
 

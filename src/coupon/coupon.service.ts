@@ -11,6 +11,25 @@ class CouponService {
             tenantId,
         });
     }
+
+    async update(
+        couponId: string | undefined,
+        { title, code, discount, validUpto, tenantId }: ICoupon
+    ) {
+        return await CouponModel.findByIdAndUpdate(
+            couponId,
+            {
+                $set: {
+                    title,
+                    code,
+                    discount,
+                    validUpto,
+                    tenantId,
+                },
+            },
+            { new: true }
+        );
+    }
 }
 
 export default CouponService;
