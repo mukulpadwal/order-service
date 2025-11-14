@@ -19,6 +19,8 @@ const couponSchema = new Schema<ICoupon>(
         discount: {
             type: Number,
             required: true,
+            min: 0,
+            max: 100,
         },
         validUpto: {
             type: Date,

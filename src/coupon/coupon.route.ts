@@ -4,6 +4,7 @@ import { asyncWrapper } from "../common/utils/index.js";
 import { logger } from "../config/index.js";
 import CouponService from "./coupon.service.js";
 import CouponController from "./coupon.controller.js";
+import { Roles } from "../common/constants/index.js";
 
 const couponRouter = Router();
 const couponService = new CouponService();
@@ -13,7 +14,7 @@ const couponController = new CouponController(couponService, logger);
 couponRouter.post(
     "/",
     authenticate,
-    canAccess,
+    canAccess([Roles.ADMIN, Roles.MANAGER]),
     asyncWrapper(couponController.create)
 );
 
