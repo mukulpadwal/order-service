@@ -30,6 +30,14 @@ class CouponService {
             { new: true }
         );
     }
+
+    async delete(couponId: string | undefined) {
+        return await CouponModel.findByIdAndDelete(couponId);
+    }
+
+    async findById(couponId: string | undefined) {
+        return await CouponModel.findById(couponId);
+    }
 }
 
 export default CouponService;

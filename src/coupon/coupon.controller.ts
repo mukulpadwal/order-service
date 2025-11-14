@@ -50,7 +50,7 @@ class CouponController {
 
         if (!coupon) {
             const error = createHttpError(
-                400,
+                401,
                 "Something went wrong while creating coupon."
             );
             next(error);
@@ -87,7 +87,7 @@ class CouponController {
             Number(authReq.tenantId) !== Number(tenantId)
         ) {
             const error = createHttpError(
-                400,
+                401,
                 "You are not allowed to update coupon details for any other tenant."
             );
             next(error);
@@ -115,7 +115,50 @@ class CouponController {
             .json(new ApiResponse(201, "Coupon updated.", coupon));
     };
 
-    delete = async (req: Request, res: Response) => {};
+    delete = async (req: Request, res: Response, next: NextFunction) => {
+        const { couponId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(couponId as string)) {
+            const error = createHttpError(400, "Invalid couponId");
+            next(error);
+            return;
+        }
+
+        this.logger.info(`Request to delete coupon.`, {
+            couponId,
+        });
+
+        const coupon = await this.couponService.findById(couponId);
+
+        if (!coupon) {
+            const error = createHttpError(404, "Coupon not found.");
+            next(error);
+            return;
+        }
+
+        const authReq = (req as IAuthRequest).auth;
+
+        // Manager Should Only be able to update it's tenant's coupon
+        if (
+            authReq.role === Roles.MANAGER &&
+            Number(authReq.tenantId) !== Number(coupon?.tenantId)
+        ) {
+            const error = createHttpError(
+                401,
+                "You are not allowed to delete coupon any other tenant."
+            );
+            next(error);
+            return;
+        }
+
+        await this.couponService.delete(couponId);
+
+        this.logger.info(`Coupon Deleted.`, {
+            couponId,
+        });
+
+        return res.status(200).json(new ApiResponse(200, "Coupon deleted."));
+    };
 
     getAll = async (req: Request, res: Response) => {};
 

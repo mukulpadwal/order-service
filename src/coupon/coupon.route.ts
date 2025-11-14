@@ -28,7 +28,7 @@ couponRouter.patch(
 couponRouter.delete(
     "/:couponId",
     authenticate,
-    canAccess,
+    canAccess([Roles.ADMIN, Roles.MANAGER]),
     asyncWrapper(couponController.delete)
 );
 
