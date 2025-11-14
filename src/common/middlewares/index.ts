@@ -1,4 +1,5 @@
-import globalErrorHandler from "./globalErrorHandler.js";
 import authenticate from "./authenticate.js";
+import canAccess from "./canAccess.js";
+import globalErrorHandler from "./globalErrorHandler.js";
 
-export { authenticate, globalErrorHandler };
+export { authenticate, canAccess, globalErrorHandler };

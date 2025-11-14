@@ -1,5 +1,44 @@
 import { Router } from "express";
+import { authenticate, canAccess } from "../common/middlewares/index.js";
+import { asyncWrapper } from "../common/utils/index.js";
+import { logger } from "../config/index.js";
+import CouponService from "./coupon.service.js";
+import CouponController from "./coupon.controller.js";
 
 const couponRouter = Router();
+const couponService = new CouponService();
+const couponController = new CouponController(couponService, logger);
+
+// Private Routes
+couponRouter.post(
+    "/",
+    authenticate,
+    canAccess,
+    asyncWrapper(couponController.create)
+);
+
+couponRouter.patch(
+    "/:couponId",
+    authenticate,
+    canAccess,
+    asyncWrapper(couponController.update)
+);
+
+couponRouter.delete(
+    "/:couponId",
+    authenticate,
+    canAccess,
+    asyncWrapper(couponController.delete)
+);
+
+couponRouter.get(
+    "/list",
+    authenticate,
+    canAccess,
+    asyncWrapper(couponController.getAll)
+);
+
+// Public Routes
+couponRouter.get("/", asyncWrapper(couponController.getSingle));
 
 export default couponRouter;

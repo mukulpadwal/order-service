@@ -3,9 +3,9 @@ import type CustomerService from "./customer.service.js";
 import type { Logger } from "winston";
 import { ApiResponse } from "../common/utils/index.js";
 import type { Request } from "express-jwt";
-import type { ICustomerRequest } from "./customer.types.js";
 import mongoose from "mongoose";
 import createHttpError from "http-errors";
+import type { IAuthRequest } from "../common/types/index.js";
 
 class CustomerController {
     private customerService: CustomerService;
@@ -22,7 +22,7 @@ class CustomerController {
             firstName,
             lastName,
             email,
-        } = (req as ICustomerRequest).auth;
+        } = (req as IAuthRequest).auth;
 
         this.logger.info("Request to fetch customer details.", {
             userId,
@@ -67,7 +67,7 @@ class CustomerController {
     };
 
     addAddress = async (req: Request, res: Response, next: NextFunction) => {
-        const { sub: userId } = (req as ICustomerRequest).auth;
+        const { sub: userId } = (req as IAuthRequest).auth;
         const { customerId } = req.params;
 
         this.logger.info("Request to add address.", {
