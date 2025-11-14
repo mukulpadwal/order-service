@@ -40,6 +40,6 @@ couponRouter.get(
 );
 
 // Public Routes
-couponRouter.get("/", asyncWrapper(couponController.getSingle));
+couponRouter.post("/verify", asyncWrapper(couponController.verify));
 
 export default couponRouter;

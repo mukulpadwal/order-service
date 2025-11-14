@@ -168,7 +168,7 @@ class CouponController {
         const filters: ICouponFilter = {};
 
         const authReq = (req as IAuthRequest).auth;
-        
+
         if (tenantId && (tenantId as string).trim()) {
             if (authReq.role === Roles.MANAGER) {
                 filters.tenantId = Number(authReq.tenantId);
@@ -212,7 +212,50 @@ class CouponController {
             .json(new ApiResponse(200, "Coupons fetched.", coupons));
     };
 
-    getSingle = async (req: Request, res: Response) => {};
+    verify = async (req: Request, res: Response, next: NextFunction) => {
+        const { code, tenantId } = req.body;
+
+        if ([code, tenantId].some((field) => !field)) {
+            const error = createHttpError(400, "Missing field values.");
+            next(error);
+            return;
+        }
+
+        this.logger.info("Requets to verify coupon", { code, tenantId });
+
+        const coupon = await this.couponService.findOne({
+            code,
+            tenantId: Number(tenantId),
+        });
+
+        if (!coupon) {
+            this.logger.info("Coupon Not Found.", { code, tenantId });
+            const error = createHttpError(404, "Invalid Coupon.");
+            next(error);
+            return;
+        }
+
+        const currDate = new Date();
+        const couponDate = new Date(coupon.validUpto);
+
+        if (currDate <= couponDate) {
+            this.logger.info("Coupon Verified", { code, tenantId });
+
+            return res.status(200).json(
+                new ApiResponse(200, "Valid Coupon", {
+                    discount: coupon.discount,
+                })
+            );
+        }
+
+        this.logger.info("Coupon Expired", { code, tenantId });
+
+        return res.status(200).json(
+            new ApiResponse(200, "Token Expired.", {
+                discount: 0,
+            })
+        );
+    };
 }
 
 export default CouponController;
