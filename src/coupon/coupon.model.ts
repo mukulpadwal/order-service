@@ -36,6 +36,7 @@ const couponSchema = new Schema<ICoupon>(
 );
 
 couponSchema.plugin(mongooseAggregatePaginate);
+couponSchema.index({ tenantId: 1, code: 1 }, { unique: true });
 
 const CouponModel = model("coupon", couponSchema);
 export default CouponModel;
