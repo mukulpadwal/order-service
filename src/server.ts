@@ -15,7 +15,13 @@ const startServer = async () => {
 
         broker = createBroker();
         await broker.connectConsumer();
-        await broker.consumeMessage(["product"], false);
+        await broker.consumeMessage(
+            [
+                config.get("kafka.topic.product"),
+                config.get("kafka.topic.topping"),
+            ],
+            false
+        );
 
         app.listen(PORT, () => {
             logger.info("Server up and listening on PORT", { PORT: PORT });
