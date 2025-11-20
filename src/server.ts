@@ -15,6 +15,7 @@ const startServer = async () => {
 
         broker = createBroker();
         await broker.connectConsumer();
+        await broker.consumeMessage(["product"], false);
 
         app.listen(PORT, () => {
             logger.info("Server up and listening on PORT", { PORT: PORT });
