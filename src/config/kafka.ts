@@ -1,5 +1,6 @@
 import { Kafka, type Consumer, type EachMessagePayload } from "kafkajs";
 import type { Broker } from "../common/types/broker.js";
+import handleProductUpdate from "../productCache/productUpdateHandler.js";
 
 export default class KafkaBroker implements Broker {
     private consumer: Consumer;
@@ -42,11 +43,13 @@ export default class KafkaBroker implements Broker {
                 partition,
                 message,
             }: EachMessagePayload) => {
-                console.log({
-                    value: message.value?.toString(),
-                    topic,
-                    partition,
-                });
+                switch (topic) {
+                    case "product":
+                        await handleProductUpdate(message.value?.toString());
+                        return;
+                    default:
+                        return;
+                }
             },
         });
     }

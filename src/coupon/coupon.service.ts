@@ -50,6 +50,10 @@ class CouponService {
 
         const matchQueryParams = {
             ...filters,
+            validUpto: {
+                $gte: new Date().toISOString(),
+                $lte: filters.validUpto,
+            },
             title: regExp,
         };
 
