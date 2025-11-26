@@ -1,7 +1,12 @@
 import type { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
-import type { ICartItem, ITopping } from "./order.types.js";
+import {
+    OrderStatus,
+    PaymentStatus,
+    type ICartItem,
+    type ITopping,
+} from "./order.types.js";
 import type OrderService from "./order.service.js";
 import type { Logger } from "winston";
 import ApiResponse from "../common/utils/apiResponse.js";
@@ -65,11 +70,24 @@ export default class OrderController {
 
         const finalTotalAmount = priceAfterDiscount + taxes + deliveryCharges;
 
-        return res.status(200).json(
-            new ApiResponse(200, "", {
-                finalTotalAmount
-            })
-        );
+        const newOrder = await this.orderService.create({
+            cart,
+            address,
+            comment,
+            customerId,
+            deliveryCharges: Number(deliveryCharges),
+            discountAmount: discountPercentage,
+            paymentMode,
+            orderStatus: OrderStatus.RECEIVED,
+            paymentStatus: PaymentStatus.PENDING,
+            taxes,
+            tenantId,
+            totalAmount: finalTotalAmount,
+        });
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, "Order Placed", newOrder));
     };
 
     private async calculateCartTotalAmount(cart: ICartItem[]): Promise<number> {

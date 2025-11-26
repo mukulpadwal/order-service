@@ -2,6 +2,8 @@ import ProductCacheModel from "../productCache/productCache.model.js";
 import handleProductUpdate from "../productCache/productUpdateHandler.js";
 import ToppingCacheModel from "../toppingCache/toppingCache.model.js";
 import handleToppingUpdate from "../toppingCache/toppingUpdateHandler.js";
+import OrderModel from "./order.model.js";
+import type { IOrder } from "./order.types.js";
 
 export default class OrderService {
     async getExitingProductDetails(productIds: string[]) {
@@ -78,5 +80,9 @@ export default class OrderService {
         );
 
         return toppings.filter((topping) => topping !== null);
+    }
+
+    async create(orderPayload: IOrder) {
+        return await OrderModel.create(orderPayload);
     }
 }
