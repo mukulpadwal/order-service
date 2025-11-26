@@ -6,11 +6,13 @@ import createOrderValidator from "./createOrder.validator.js";
 import OrderService from "./order.service.js";
 import { logger } from "../config/index.js";
 import CouponService from "../coupon/coupon.service.js";
+import IdempotencyService from "../idempotency/idempotency.service.js";
 
 const orderRouter = Router();
 const orderService = new OrderService();
 const copuponService = new CouponService();
-const orderController = new OrderController(orderService, copuponService, logger);
+const idempotencyService = new IdempotencyService();
+const orderController = new OrderController(orderService, copuponService, idempotencyService, logger);
 
 orderRouter.post(
     "/create",

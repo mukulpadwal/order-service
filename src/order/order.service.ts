@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import ProductCacheModel from "../productCache/productCache.model.js";
 import handleProductUpdate from "../productCache/productUpdateHandler.js";
 import ToppingCacheModel from "../toppingCache/toppingCache.model.js";
@@ -82,7 +83,11 @@ export default class OrderService {
         return toppings.filter((topping) => topping !== null);
     }
 
-    async create(orderPayload: IOrder) {
-        return await OrderModel.create(orderPayload);
+    async create(orderPayload: IOrder, session: mongoose.ClientSession) {
+        return await OrderModel.create([orderPayload], { session });
+    }
+
+    async startSession() {
+        return await mongoose.startSession();
     }
 }

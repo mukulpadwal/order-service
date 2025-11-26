@@ -14,11 +14,13 @@ import fetchWithCache from "../common/utils/fetchWithCache.js";
 import type { IProductCache } from "../productCache/productCache.types.js";
 import type { IToppingCache } from "../toppingCache/toppingCache.types.js";
 import type CouponService from "../coupon/coupon.service.js";
+import type IdempotencyService from "../idempotency/idempotency.service.js";
 
 export default class OrderController {
     constructor(
         private orderService: OrderService,
         private couponService: CouponService,
+        private idempotencyService: IdempotencyService,
         private logger: Logger
     ) {}
 
@@ -70,24 +72,67 @@ export default class OrderController {
 
         const finalTotalAmount = priceAfterDiscount + taxes + deliveryCharges;
 
-        const newOrder = await this.orderService.create({
-            cart,
-            address,
-            comment,
-            customerId,
-            deliveryCharges: Number(deliveryCharges),
-            discountAmount: discountPercentage,
-            paymentMode,
-            orderStatus: OrderStatus.RECEIVED,
-            paymentStatus: PaymentStatus.PENDING,
-            taxes,
-            tenantId,
-            totalAmount: finalTotalAmount,
-        });
+        const idempotencyKey = req.headers["idempotency-key"];
+
+        const idempotency = await this.idempotencyService.findOne(
+            idempotencyKey as string
+        );
+
+        let newOrder = idempotency ? [idempotency.response]: [];
+
+        if (!idempotency) {
+            const session = await this.orderService.startSession();
+            await session.startTransaction();
+
+            try {
+                const newOrder = await this.orderService.create(
+                    {
+                        cart,
+                        address,
+                        comment,
+                        customerId,
+                        deliveryCharges: Number(deliveryCharges),
+                        discountAmount: discountPercentage,
+                        paymentMode,
+                        orderStatus: OrderStatus.RECEIVED,
+                        paymentStatus: PaymentStatus.PENDING,
+                        taxes,
+                        tenantId,
+                        totalAmount: finalTotalAmount,
+                    },
+                    session
+                );
+
+                await this.idempotencyService.create(
+                    {
+                        key: idempotencyKey as string,
+                        response: newOrder[0] as object,
+                    },
+                    session
+                );
+
+                await session.commitTransaction();
+            } catch (error) {
+                await session.abortTransaction();
+                await session.endSession();
+                const customError = createHttpError(
+                    500,
+                    error instanceof Error
+                        ? error.message
+                        : "Error placing order"
+                );
+                next(customError);
+                return;
+            } finally {
+                await session.endSession();
+            }
+        }
+
+        // TODO: Payment Processing
 
         return res
             .status(200)
-            .json(new ApiResponse(200, "Order Placed", newOrder));
+            .json(new ApiResponse(200, "Order Placed", { newOrder }));
     };
 
     private async calculateCartTotalAmount(cart: ICartItem[]): Promise<number> {
