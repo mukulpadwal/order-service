@@ -75,7 +75,7 @@ class CouponService {
     }
 
     async findOne({ code, tenantId }: Pick<ICoupon, "code" | "tenantId">) {
-        return await CouponModel.findOne({ code, tenantId });
+        return await CouponModel.findOne({ code, tenantId }).lean();
     }
 }
 

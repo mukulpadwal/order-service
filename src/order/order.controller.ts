@@ -8,10 +8,12 @@ import ApiResponse from "../common/utils/apiResponse.js";
 import fetchWithCache from "../common/utils/fetchWithCache.js";
 import type { IProductCache } from "../productCache/productCache.types.js";
 import type { IToppingCache } from "../toppingCache/toppingCache.types.js";
+import type CouponService from "../coupon/coupon.service.js";
 
 export default class OrderController {
     constructor(
         private orderService: OrderService,
+        private couponService: CouponService,
         private logger: Logger
     ) {}
 
@@ -36,10 +38,38 @@ export default class OrderController {
 
         // Calculate the finalAmount of the cart
         const totalPrice = await this.calculateCartTotalAmount(cart);
+        const coupon = await this.couponService.findOne({
+            code: couponCode,
+            tenantId: Number(tenantId),
+        });
+        let discountPercentage = 0;
 
-        return res
-            .status(200)
-            .json(new ApiResponse(200, "", { totalPrice: totalPrice }));
+        if (coupon) {
+            const currDate = new Date();
+            const couponDate = new Date(coupon.validUpto);
+
+            if (currDate <= couponDate) {
+                discountPercentage = coupon.discount;
+            }
+        }
+
+        const priceAfterDiscount =
+            totalPrice - Math.round((totalPrice * discountPercentage) / 100);
+
+        // Currently hard coding tax to 18%
+        // TODO: need to decide a logic for tax
+        const taxes = Math.round((priceAfterDiscount * 18) / 100);
+
+        // TODO: need to decide of a logic based on each tenant
+        const deliveryCharges = 100;
+
+        const finalTotalAmount = priceAfterDiscount + taxes + deliveryCharges;
+
+        return res.status(200).json(
+            new ApiResponse(200, "", {
+                finalTotalAmount
+            })
+        );
     };
 
     private async calculateCartTotalAmount(cart: ICartItem[]): Promise<number> {
